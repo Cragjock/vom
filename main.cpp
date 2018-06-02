@@ -20,7 +20,7 @@ int main()
         loopcount++;
         this_thread::sleep_for(chrono::seconds(1));
     }
-    while(loopcount <5);
+    while(loopcount <3);
 
 
     return 0;

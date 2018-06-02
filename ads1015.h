@@ -2,21 +2,21 @@
 #ifndef ADS_1015_H
 #define ADS_1015_H
 
-#include <unistd.h>
-#include <cstdint>
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
+///#include <unistd.h>
+///#include <cstdint>
+///#include <cerrno>
+///#include <cstdio>
+///#include <cstdlib>
 /// #include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
+///#include <sys/ioctl.h>
 //#include <linux/i2c.h>
-#include <fcntl.h>
-#include <time.h>
-#include <byteswap.h>
+///#include <fcntl.h>
+/// #include <time.h>
+///#include <byteswap.h>
 
-#include <string>
-#include <memory>
-//#include "myi2c.h"
+///#include <string>
+///#include <memory>
+///#include "myi2c.h"
 
 #define LBYTE(LB) (LB & 0x0FF)
 #define HBYTE(HB) ((HB & 0xFF00)>>8)
@@ -121,9 +121,15 @@ class ads1015
         unsigned int mcp23008address;
         char mcp23008busfile[64];
         std::string ads1015dev_name;
+
         uint16_t config_register;
-        uint8_t PGA;
+        uint8_t MV;
         uint8_t DATA_RATE;
+        uint16_t current_PGA;
+        uint16_t current_MUX;
+        uint16_t current_DR;
+
+
         int ADS1015_Init();
         int ADS1015_op_init();
 

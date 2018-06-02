@@ -2,24 +2,24 @@
 #ifndef MY_I2C_H
 #define MY_I2C_H
 
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <stdint.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>     /// <contains string>? and uint8_t ???
+///#include <iomanip>
+///#include <cmath>
+///#include <cstdint>
+#include <unistd.h> /// for :: close
+///#include <cerrno>
+///#include <cstdio>
+///#include <cstdlib>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
-#include <fcntl.h>
-#include <time.h>
-#include <poll.h>
-#include <signal.h>
-#include <string>
-#include <vector>
-#include <linux/swab.h>     // for swab16 will this work ??
-#include <byteswap.h>       // placeholder to remember for ADS1015 code
+#include <fcntl.h>  /// for file ::open
+///#include <time.h>
+///#include <poll.h>
+///#include <signal.h>
+///#include <string>
+
+#include <linux/swab.h>     /// for swab16 will this work ??
+#include <byteswap.h>       /// placeholder to remember for ADS1015 code
 //#include "ads1015.h"
 
 #define swab16 __swab16 // http://lxr.free-electrons.com/source/include/linux/swab.h#L6

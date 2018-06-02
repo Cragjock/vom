@@ -1,11 +1,12 @@
 #include <chrono>		//chrono::milliseconds(1000); need scope chrono
 #include <thread>
+#include <vector>
 #include "ads1015.h"
 #include "myi2c.h"
 
 using namespace std;
 
-char* mux_type[]=
+string mux_type[]=              /// char* mux_type[]=
 {
     "Ain_p=Ain0 & Ain_n=Ain1",
     "Ain_p=Ain0 & Ain_n=Ain3",
@@ -29,10 +30,10 @@ enum channel {MUX0, MUX1, MUX2, MUX3, MUX4, MUX5, MUX6, MUX7};
 enum D_R {DR128SPS, DR250SPS, DR490SPS, DR920SPS, DR1600SPS, DR2400SPS, DR3300SPS, DR3301SPS};
 enum FScale {mv6144, mv4096, mv2048, mv1024, mv512, mv256};
 enum class datarates {DR128SPS, DR250SPS, DR490SPS, DR920SPS, DR1600SPS, DR2400SPS, DR3300SPS, DR3301SPS};
+enum class gain {mv6144, mv4096, mv2048, mv1024, mv512, mv256};
 
-//myADS1015 ADC = {0x48, mv2048, 1, MUX4, DR250SPS};
+
 myADS1015 ADC = {0x48, mv4096, 0, MUX0, DR250SPS};
-
 myADS1015 arrADC[4]=  {
                     {0x48, mv4096, 0, MUX0, DR250SPS},
                     {0x48, mv2048, 1, MUX1, DR250SPS},
@@ -40,37 +41,30 @@ myADS1015 arrADC[4]=  {
                     {0x48, 0, 0, 0, 0},
                 };
 
+vector<double>mv_gain={3.0, 2.0, 1.0, 0.5, 0.25, 0.125};
 
-//myADS1015 ADC = {0x48, mv2048, 1, MUX4, DR250SPS};
-
-const char * i2cdev[2] = {"/dev/ic2-0","/dev/i2c-1"};
-static int slave_address = 0x48;
-static uint16_t default_config_reg = 0x0583;
-static uint16_t init_config_reg = 0x4223;
+//const char * i2cdev[2] = {"/dev/ic2-0","/dev/i2c-1"};
+//static int slave_address = 0x48;
+//static uint16_t default_config_reg = 0x0583;
+//static uint16_t init_config_reg = 0x4223;
 
 /*************************************************/
  ads1015::ads1015()
  {
-    myI2C= unique_ptr<I2CBus>(new I2CBus(1,0x48));
-    //myI2C = new I2CBus(1,0x48);
-
+    myI2C= unique_ptr<I2CBus>(new I2CBus(1,0x48)); //myI2C = new I2CBus(1,0x48);
     ADS1015_Init();
  }
 
  /*************************************************/
- ads1015::ads1015(uint8_t bus, uint8_t address)  //I2CBus(unsigned int bus, unsigned int address);
+ ads1015::ads1015(uint8_t bus, uint8_t address)
  {
-    myI2C= unique_ptr<I2CBus>(new I2CBus(1,0x48));
-    //myI2C = new I2CBus(1,0x48);
-
+    myI2C= unique_ptr<I2CBus>(new I2CBus(1,0x48));  //myI2C = new I2CBus(1,0x48);
     ADS1015_Init();
-
  }
 
 /*************************************************/
  ads1015::~ads1015()
  {
-
 
  }
 
@@ -104,9 +98,10 @@ uint8_t ads1015::read_config_reg()
                     arrADC[3].Mux,
                     arrADC[3].PGA);
 
-    printf("Mux number is: %s \n", mux_type[arrADC[3].Mux]);
+    printf("Mux number is: %s \n", mux_type[arrADC[3].Mux].c_str());
     printf("PGA setting is: %d \n", fullscale[arrADC[3].PGA]);
     printf("Data rate is: %d \n", data_rates[arrADC[3].data_rate]);
+    MV = arrADC[3].PGA;
 
     return resultswap;
 }
@@ -116,11 +111,26 @@ uint8_t ads1015::read_config_reg()
 **************************************/
 int ads1015::ADS1015_Init()
 {
-    init_config_reg = mux_single_1 | PGA_4096 | DR_250sps | MODE_CONTINUOUS | COMP_QUE_DISABLE; // best is 4096 ?
+    uint16_t init_config_reg = mux_single_1 | PGA_4096 | DR_250sps | MODE_CONTINUOUS | COMP_QUE_DISABLE;
     /// should be 0x4223
     myI2C->device_write_swap(Config_Reg,init_config_reg);
-    ///myI2C_write_swap(file, Config_Reg, init_config_reg);
-    //ADS1015_op_init();
+    ///ADS1015_op_init();
+
+    current_PGA = (init_config_reg &0x0E00);
+    current_MUX = (init_config_reg &0x7000);
+    current_DR = (init_config_reg &0x0e0);
+
+    switch(current_PGA)
+    {
+        case PGA_6144: MV = static_cast<uint8_t>(gain::mv6144); break;
+        case PGA_4096: MV = static_cast<uint8_t>(gain::mv4096); break;
+        case PGA_2048: MV = static_cast<uint8_t>(gain::mv2048); break;
+        case PGA_1024: MV = static_cast<uint8_t>(gain::mv1024); break;
+        case PGA_0512: MV = static_cast<uint8_t>(gain::mv512); break;
+        case PGA_0256: MV = static_cast<uint8_t>(gain::mv256); break;
+        default: MV = static_cast<uint8_t>(gain::mv4096); break;
+    }
+    MV = static_cast<uint8_t>(gain::mv4096);
 
     return 1;
 }
@@ -223,7 +233,8 @@ float ads1015::read_conversion()
     if((result & SIGN_MASK) == SIGN_MASK)
         result = -(~(result)+1);
 
-    result = (result>>4)*2;         /// assumes gain is 2mv/bit, maybe times PGA value?
+    //result = (result>>4)*2;         /// assumes gain is 2mv/bit, PGA = 4096
+    result = (result>>4)*mv_gain[MV];         /// assumes gain is 2mv/bit, PGA = 4096
 
     printf("===================");
     printf("the voltage (x1) is: %2.3f\n", (float)result/1000);

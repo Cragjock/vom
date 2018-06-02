@@ -1,4 +1,5 @@
 
+#include <vector>
 #include "myi2c.h"
 
 
