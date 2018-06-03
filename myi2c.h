@@ -23,8 +23,8 @@
 //#include "ads1015.h"
 
 #define swab16 __swab16 // http://lxr.free-electrons.com/source/include/linux/swab.h#L6
-#define LBYTE(LB) (LB & 0x0FF)
-#define HBYTE(HB) ((HB & 0xF00)>>8)
+/// #define LBYTE(LB) (LB & 0x0FF)
+/// #define HBYTE(HB) ((HB & 0xF00)>>8)
 
 
 /// I2C slave address

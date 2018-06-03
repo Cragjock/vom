@@ -9,7 +9,7 @@
 ///#include <cstdlib>
 /// #include <linux/i2c-dev.h>
 ///#include <sys/ioctl.h>
-//#include <linux/i2c.h>
+///#include <linux/i2c.h>        /// do not use this
 ///#include <fcntl.h>
 /// #include <time.h>
 ///#include <byteswap.h>
@@ -75,7 +75,7 @@
 #define DR_2400sps 0x00A0
 #define DR_3300sps 0x00C0
 #define DR_3300sps 0x00E0
-
+/// operational modes
 #define MODE_CONTINUOUS 0x0
 #define MODE_SINGLE_SHOT 0x0100
 
@@ -109,9 +109,11 @@ typedef struct _myADS1015
     UINT Mux;            // differential input, INP=IN0, INN=IN1, but can have 8 channel to select from
     UINT data_rate;
 } myADS1015;
-
+enum class mode {continous, single};
 
 class I2CBus;           /// forward declaration to avoid the include myi2c.h
+//enum class mode;
+enum class update;
 class ads1015
 {
     private:
@@ -128,18 +130,21 @@ class ads1015
         uint16_t current_PGA;
         uint16_t current_MUX;
         uint16_t current_DR;
-
+        mode convert_type;
 
         int ADS1015_Init();
-        int ADS1015_op_init();
+        ///int ADS1015_op_init();
 
     public:
         ads1015();
         ads1015(uint8_t bus, uint8_t address);
         float read_conversion();
         bool set_config(uint8_t config);
-        uint8_t read_config(uint8_t CR) const;
-        uint8_t read_config_reg();
+        uint16_t get_config_reg(uint8_t CR) const {return config_register;}
+        uint16_t read_config_reg();
+        uint16_t update_config_reg(update item, uint16_t cr_update);
+
+        void set_mode(mode op_status);
         void closeads1015();
         ~ads1015();
 };
